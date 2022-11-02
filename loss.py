@@ -3,9 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from loss_kernels import *
 
-CUDA_AVALABLE = th.cuda.is_available()
-DEVICE = th.device("cuda", 0)
-
 DATETIME_FMT = "%Y-%m-%d_%H-%M-%S"
 
 EPSILON = 1E-9
@@ -20,6 +17,13 @@ def triu(X):
 def _atleast_epsilon(X, eps=EPSILON):
     """
     Ensure that all elements are >= `eps`.
+
+    :param X: Input elements
+    :type X: th.Tensor
+    :param eps: epsilon
+    :type eps: float
+    :return: New version of X where elements smaller than `eps` have been replaced with `eps`.
+    :rtype: th.Tensor
     """
     return th.where(X < eps, X.new_tensor(eps), X)
 
@@ -27,6 +31,15 @@ def _atleast_epsilon(X, eps=EPSILON):
 def d_cs(A, K, n_clusters):
     """
     Cauchy-Schwarz divergence.
+
+    :param A: Cluster assignment matrix
+    :type A:  th.Tensor
+    :param K: Kernel matrix
+    :type K: th.Tensor
+    :param n_clusters: Number of clusters
+    :type n_clusters: int
+    :return: CS-divergence
+    :rtype: th.Tensor
     """
     nom = th.t(A) @ K @ A
     dnom_squared = th.unsqueeze(th.diagonal(nom), -1) @ th.unsqueeze(th.diagonal(nom), 0)
@@ -47,7 +60,14 @@ class LossTerm:
     required_tensors = []
 
     def __init__(self, *args, **kwargs):
+        """
+        Base class for a term in the loss function.
 
+        :param args:
+        :type args:
+        :param kwargs:
+        :type kwargs:
+        """
         pass
 
     def __call__(self, net, cfg, extra):
@@ -90,7 +110,7 @@ class DDC3(LossTerm):
 
     def __init__(self, cfg):
         super().__init__()
-        self.eye = th.eye(cfg.n_clusters, device=DEVICE)
+        self.eye = th.eye(cfg.n_clusters, device=th.device('cuda',cfg.device))
 
     def __call__(self, net, cfg, extra):
         m = th.exp(-cdist(net.output[0], self.eye))
@@ -101,21 +121,87 @@ class kl_div(LossTerm):
     KL divergence loss to avoid cluster collapse
     """
     def __call__(self, net, cfg, extra):
-        q = th.ones(net.output[0].shape[1], device=DEVICE)/cfg.n_clusters
+        q = th.ones(net.output[0].shape[1], device=th.device('cuda',cfg.device))/cfg.n_clusters
         return F.kl_div(th.mean(net.output[0], dim=0), q, reduction='batchmean')
     
-    
+class zinb1(LossTerm):
+    """
+    zinb loss for highly-sparse rna data
+    """
+    def __call__(self, net, cfg, extra):
+
+        x = net.mv_input[1][0]
+        mean = net.output[2][0]
+        disp = net.output[3][0]
+        pi = net.output[4][0]
+        scale_factor = net.mv_input[2][0][:, None]
+        ridge_lambda=0.0
+        eps = 1e-10
+        mean = mean * scale_factor
+        
+        t1 = th.lgamma(disp+eps) + th.lgamma(x+1.0) - th.lgamma(x+disp+eps)
+        t2 = (disp+x) * th.log(1.0 + (mean/(disp+eps))) + (x * (th.log(disp+eps) - th.log(mean+eps)))
+        nb_final = t1 + t2
+
+        nb_case = nb_final - th.log(1.0-pi+eps)
+        zero_nb = th.pow(disp/(disp+mean+eps), disp)
+        zero_case = -th.log(pi + ((1.0-pi)*zero_nb)+eps)
+        result = th.where(th.le(x, 1e-8), zero_case, nb_case)
+        
+        if ridge_lambda > 0:
+            ridge = ridge_lambda*th.square(pi)
+            result += ridge
+        
+        result = th.mean(result)
+        return result
+
+class zinb2(LossTerm):
+    """
+    zinb loss for highly-sparse rna data
+    """
+    def __call__(self, net, cfg, extra):
+
+        x = net.mv_input[1][1]
+        mean = net.output[2][1]
+        disp = net.output[3][1]
+        pi = net.output[4][1]
+        scale_factor = net.mv_input[2][1][:, None]
+        ridge_lambda=0.0
+        eps = 1e-10
+        mean = mean * scale_factor
+        
+        t1 = th.lgamma(disp+eps) + th.lgamma(x+1.0) - th.lgamma(x+disp+eps)
+        t2 = (disp+x) * th.log(1.0 + (mean/(disp+eps))) + (x * (th.log(disp+eps) - th.log(mean+eps)))
+        nb_final = t1 + t2
+
+        nb_case = nb_final - th.log(1.0-pi+eps)
+        zero_nb = th.pow(disp/(disp+mean+eps), disp)
+        zero_case = -th.log(pi + ((1.0-pi)*zero_nb)+eps)
+        result = th.where(th.le(x, 1e-8), zero_case, nb_case)
+        
+        if ridge_lambda > 0:
+            ridge = ridge_lambda*th.square(pi)
+            result += ridge
+        
+        result = th.mean(result)
+        return result
+
 class Contrastive(LossTerm):
     large_num = 1e9
 
     def __init__(self, cfg):
+        """
+        Contrastive loss function
 
+        :param cfg: Loss function config
+        :type cfg: config.defaults.Loss
+        """
         super().__init__()
         # Select which implementation to use
         if cfg.negative_samples_ratio == -1:
             self._loss_func = self._loss_without_negative_sampling
         else:
-            self.eye = th.eye(cfg.n_clusters, device=DEVICE)
+            self.eye = th.eye(cfg.n_clusters, device=th.device('cuda',cfg.device))
             self._loss_func = self._loss_with_negative_sampling
 
         # Set similarity function
@@ -149,7 +235,20 @@ class Contrastive(LossTerm):
         return h @ h.t()
 
     def _draw_negative_samples(self, net, cfg, v, pos_indices):
+        """
+        Construct set of negative samples.
 
+        :param net: Model
+        :type net: Union[models.simple_mvc.SiMVC, models.contrastive_mvc.CoMVC]
+        :param cfg: Loss config
+        :type cfg: config.defaults.Loss
+        :param v: Number of views
+        :type v: int
+        :param pos_indices: Row indices of the positive samples in the concatenated similarity matrix
+        :type pos_indices: th.Tensor
+        :return: Indices of negative samples
+        :rtype: th.Tensor
+        """
         cat = net.output[0].detach().argmax(dim=1)
         cat = th.cat(v * [cat], dim=0)
 
@@ -168,7 +267,18 @@ class Contrastive(LossTerm):
 
     @staticmethod
     def _get_positive_samples(logits, v, n):
+        """
+        Get positive samples
 
+        :param logits: Input similarities
+        :type logits: th.Tensor
+        :param v: Number of views
+        :type v: int
+        :param n: Number of samples per view (batch size)
+        :type n: int
+        :return: Similarities of positive pairs, and their indices
+        :rtype: Tuple[th.Tensor, th.Tensor]
+        """
         diagonals = []
         inds = []
         for i in range(1, v):
@@ -188,7 +298,18 @@ class Contrastive(LossTerm):
         return pos, pos_inds
 
     def _loss_with_negative_sampling(self, net, cfg, extra):
+        """
+        Contrastive loss implementation with negative sampling.
 
+        :param net: Model
+        :type net: Union[models.simple_mvc.SiMVC, models.contrastive_mvc.CoMVC]
+        :param cfg: Loss config
+        :type cfg: config.defaults.Loss
+        :param extra:
+        :type extra:
+        :return: Loss value
+        :rtype: th.Tensor
+        """
         n = net.output[0].size(0)
         v = len(net.output[1])
         logits = self.similarity_func(net.projections) / cfg.tau
@@ -198,7 +319,7 @@ class Contrastive(LossTerm):
         neg = logits[pos_inds.view(-1, 1), neg_inds]
 
         inputs = th.cat((pos.view(-1, 1), neg), dim=1)
-        labels = th.zeros(v * (v - 1) * n, device=DEVICE, dtype=th.long)
+        labels = th.zeros(v * (v - 1) * n, device=th.device('cuda',cfg.device), dtype=th.long)
         loss = th.nn.functional.cross_entropy(inputs, labels)
 
         if cfg.adaptive_contrastive_weight:
@@ -207,12 +328,24 @@ class Contrastive(LossTerm):
         return cfg.delta * loss
 
     def _loss_without_negative_sampling(self, net, cfg, extra):
+        """
+        Contrastive loss implementation without negative sampling.
+        Adapted from: https://github.com/google-research/simclr/blob/master/objective.py
 
+        :param net: Model
+        :type net: Union[models.simple_mvc.SiMVC, models.contrastive_mvc.CoMVC]
+        :param cfg: Loss config
+        :type cfg: config.defaults.Loss
+        :param extra:
+        :type extra:
+        :return:
+        :rtype:
+        """
         assert len(net.output[1]) == 2, "Contrastive loss without negative sampling only supports 2 views."
         n, h1, h2 = self._normalized_projections(net)
 
-        labels = th.arange(0, n, device=DEVICE, dtype=th.long)
-        masks = th.eye(n, device=DEVICE)
+        labels = th.arange(0, n, device=th.device('cuda',cfg.device), dtype=th.long)
+        masks = th.eye(n, device=th.device('cuda',cfg.device))
 
         logits_aa = ((h1 @ h1.t()) / cfg.tau) - masks * self.large_num
         logits_bb = ((h2 @ h2.t()) / cfg.tau) - masks * self.large_num
@@ -254,6 +387,8 @@ class Loss(nn.Module):
         "ddc_2_flipped": DDC2Flipped,
         "ddc_3": DDC3,
         "kl_div":kl_div,
+        "zinb_1":zinb1,
+        "zinb_2":zinb2,
         "contrast": Contrastive,
     }
     # Functions to compute the required tensors for the terms.
@@ -294,10 +429,5 @@ class Loss(nn.Module):
                 loss_values[name] = weight * value
 
         loss_values["tot"] = sum([loss_values[k] for k in loss_values.keys() if k not in ignore_in_total])
-        # add ZINB loss
-        if self.cfg.if_zinb:
-            raw = net.mv_input[1]
-            sf = net.mv_input[2]
-            for i in self.cfg.zinb_index:
-                loss_values["tot"] += self.cfg.gamma*net.mvae.mvae[i].zinb_loss(raw[i],net.output[2][i],net.output[3][i],net.output[4][i],sf[i])
+
         return loss_values

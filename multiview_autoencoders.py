@@ -82,7 +82,16 @@ class Backbone(nn.Module):
 # define multi layer perceptron class for projection
 class MLP(Backbone):
     def __init__(self, cfg, input_size=None, **_):
+        """
+        MLP backbone
 
+        :param cfg: MLP config
+        :type cfg: config.defaults.MLP
+        :param input_size: Optional input size which overrides the one set in `cfg`.
+        :type input_size: Optional[Union[List, Tuple]]
+        :param _:
+        :type _:
+        """
         super().__init__()
         self.output_size = self.create_linear_layers(cfg, self.layers, input_size=input_size)
 
@@ -141,7 +150,9 @@ class MLP(Backbone):
 class Autoencoder(nn.Module):
     
     def __init__(self,cfg):
-
+        """cfg: Layer = [Input_dim, ..., Latent_dim]
+                activation = "ReLU"
+        """ 
         super(Autoencoder, self).__init__()
         self.Layer = cfg.Layer
         self.activation = cfg.activation

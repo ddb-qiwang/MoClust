@@ -68,12 +68,8 @@ class multiviewDataset(data.Dataset):
                     self.views[i] = normalize(self.views[i], highly_genes=highly_genes[1][highly_cnt])
                     highly_cnt += 1
                 else:
-                    if i == 0:
-                        self.views[i] = normalize(self.views[i], copy=True, highly_genes=False, filter_min_counts=False,
-                                                  size_factors=True, normalize_input=True, logtrans_input=True)
-                    else:
-                        self.views[i].raw = self.views[i]
-                        self.views[i].obs['size_factors'] = 1.0
+                    self.views[i] = normalize(self.views[i], copy=True, highly_genes=False, filter_min_counts=False,
+                                              size_factors=True, normalize_input=True, logtrans_input=True)
 
                 print("The dimension of view %d is %d"%(i, np.shape(self.views[i].X)[1]))
             
@@ -88,6 +84,39 @@ class multiviewDataset(data.Dataset):
     
     def __len__(self):
         return len(self.labels)
+    
+class multiviewDataset_nolabel(data.Dataset):
+    
+    # highly_genes: [[a1,a2...],[b1,b2...]], ai the views needs to select, bi the number of highly var genes
+    def __init__(self, views, device, if_normalize=True, highly_genes=[[0],[4000]]):
+        
+        self.n_views = len(views)
+        self.views = views
+        self.device = device
+        # we only normalize select highly var genes for view[highly_genes[0]]
+        highly_cnt = 0 # count the number of views needs hvg
+        if if_normalize:
+            for i in range(self.n_views):
+                self.views[i] = sc.AnnData(self.views[i])
+                if i in list(highly_genes[0]):
+                    self.views[i] = normalize(self.views[i], highly_genes=highly_genes[1][highly_cnt])
+                    highly_cnt += 1
+                else:
+                    self.views[i] = normalize(self.views[i], copy=True, highly_genes=False, filter_min_counts=False,
+                                              size_factors=True, normalize_input=True, logtrans_input=True)
+
+                print("The dimension of view %d is %d"%(i, np.shape(self.views[i].X)[1]))
+            
+    def __getitem__(self, index):
+
+        batch_cells = [torch.Tensor(v.X[index]).to(self.device) for v in self.views]
+        batch_raw = [torch.Tensor(v.raw.X[index]).to(self.device) for v in self.views]
+        batch_sf = [torch.tensor(v.obs['size_factors'][index]).to(self.device) for v in self.views]
+       
+        return [batch_cells, batch_raw, batch_sf]
+    
+    def __len__(self):
+        return len(self.views[1])
 
 
 def read_clean(data):

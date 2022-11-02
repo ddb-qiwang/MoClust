@@ -38,7 +38,12 @@ class _Fusion(nn.Module):
 
 class Mean(_Fusion):
     def __init__(self, cfg, input_sizes):
+        """
+        Mean fusion.
 
+        :param cfg: Fusion config. See config.defaults.Fusion
+        :param input_sizes: Input shapes
+        """
         super().__init__(cfg, input_sizes)
         self.output_size = self.get_weighted_sum_output_size(input_sizes)
 
@@ -47,7 +52,12 @@ class Mean(_Fusion):
 
 
 class WeightedMean(_Fusion):
+    """
+    Weighted mean fusion.
 
+    :param cfg: Fusion config. See config.defaults.Fusion
+    :param input_sizes: Input shapes
+    """
     def __init__(self, cfg, input_sizes):
         super().__init__(cfg, input_sizes)
         self.weights = nn.Parameter(th.full((self.cfg.n_views,), 1 / self.cfg.n_views), requires_grad=True)

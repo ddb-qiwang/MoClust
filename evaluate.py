@@ -13,7 +13,16 @@ IGNORE_IN_TOTAL = ("contrast",)
 
 
 def calc_metrics(labels, pred):
+    """
+    Compute metrics.
 
+    :param labels: Label tensor
+    :type labels: th.Tensor
+    :param pred: Predictions tensor
+    :type pred: th.Tensor
+    :return: Dictionary containing calculated metrics
+    :rtype: dict
+    """
     acc, cmat = helpers.ordered_cmat(labels, pred)
     metrics = {
         "acc": acc,
@@ -25,7 +34,14 @@ def calc_metrics(labels, pred):
 
 
 def get_log_params(net):
+    """
+    Get the network parameters we want to log.
 
+    :param net: Model
+    :type net:
+    :return:
+    :rtype:
+    """
     params_dict = {}
     weights = []
     if getattr(net, "fusion", None) is not None:
@@ -50,7 +66,19 @@ def get_log_params(net):
 
 
 def get_eval_data(dataset, n_eval_samples, batch_size):
+    """
+    Create a dataloader to use for evaluation
 
+    :param dataset: Inout dataset.
+    :type dataset: th.utils.data.Dataset
+    :param n_eval_samples: Number of samples to include in the evaluation dataset. Set to None to use all available
+                           samples.
+    :type n_eval_samples: int
+    :param batch_size: Batch size used for training.
+    :type batch_size: int
+    :return: Evaluation dataset loader
+    :rtype: th.utils.data.DataLoader
+    """
     if n_eval_samples is not None:
         *views, labels = dataset.tensors
         n = views[0].size(0)
@@ -64,7 +92,20 @@ def get_eval_data(dataset, n_eval_samples, batch_size):
 
 
 def batch_predict(net, eval_data, batch_size, if_train=True, if_latent=False, if_recon=False, if_softlabel=False):
+    """
+    Compute predictions for `eval_data` in batches. Batching does not influence predictions, but it influences the loss
+    computations.
 
+    :param net: Model
+    :type net:
+    :param eval_data: Evaluation dataloader
+    :type eval_data: th.utils.data.DataLoader
+    :param batch_size: Batch size
+    :type batch_size: int
+    :return: Label tensor, predictions tensor, list of dicts with loss values, array containing mean and std of cluster
+             sizes.
+    :rtype:
+    """
     input_x = []
     input_y = []
     predictions = []
@@ -137,6 +178,70 @@ def batch_predict(net, eval_data, batch_size, if_train=True, if_latent=False, if
         net.train()
     return labels, predictions, losses, np.array(cluster_sizes).sum(axis=0)
 
+def batch_predict_nolabel(net, eval_data, if_train=True, if_latent=False, if_recon=False, if_softlabel=False):
+    """
+    Compute predictions for `eval_data` in batches. Batching does not influence predictions, but it influences the loss
+    computations.
+
+    :param net: Model
+    :type net:
+    :param eval_data: Evaluation dataloader
+    :type eval_data: th.utils.data.DataLoader
+    :param batch_size: Batch size
+    :type batch_size: int
+    :return: Label tensor, predictions tensor, list of dicts with loss values, array containing mean and std of cluster
+             sizes.
+    :rtype:
+    """
+    input_x = []
+    input_y = []
+    predictions = []
+    softlabel = []
+    losses = []
+    cluster_sizes = []
+    latent_features = []
+    fused_features = []
+    hidden_features = []
+    totalmeanx = []
+    totalmeany = []
+    totaldispx = []
+    totaldispy = []
+    totalpix = []
+    totalpiy = []
+
+    net.eval()
+    with th.no_grad():
+        for i, batch in enumerate(eval_data):
+            pred = net(batch)[0]
+            latent = net(batch)[1]
+            mean = net(batch)[2]
+            disp = net(batch)[3]
+            pi = net(batch)[4]
+            fused = net(batch)[5]
+            hidden = net(batch)[6]
+            input_x.append(helpers.npy(batch[0][0]))
+            input_y.append(helpers.npy(batch[0][1]))
+            softlabel.append(helpers.npy(pred))
+            predictions.append(helpers.npy(pred).argmax(axis=1))
+            latent_features.append(helpers.npy(latent))
+            fused_features.append(helpers.npy(fused))
+            hidden_features.append(helpers.npy(hidden))
+            totalmeanx.append(helpers.npy(mean[0]))
+            totalmeany.append(helpers.npy(mean[1]))
+            totaldispx.append(helpers.npy(disp[0]))
+            totaldispy.append(helpers.npy(disp[1]))
+            totalpix.append(helpers.npy(pi[0]))
+            totalpiy.append(helpers.npy(pi[1]))
+
+    if if_recon:
+        return input_x, input_y, totalmeanx, totalmeany, totaldispx, totaldispy, totalpix, totalpiy
+    if if_latent:
+        return predictions, latent_features, fused_features, hidden_features
+    if if_softlabel:
+        return softlabel
+    if if_train:
+        net.train()
+    return predictions, losses, np.array(cluster_sizes).sum(axis=0)
 
 def get_logs(net, eval_data, batch_size, eval_interval, iter_losses=None, epoch=None, include_params=True):
     if iter_losses is not None:
@@ -157,7 +262,28 @@ def get_logs(net, eval_data, batch_size, eval_interval, iter_losses=None, epoch=
 
 
 def eval_run(cfg, cfg_name, experiment_identifier, run, net, eval_data, callbacks=tuple(), load_best=True):
+    """
+    Evaluate a training run.
 
+    :param cfg: Experiment config
+    :type cfg: config.defaults.Experiment
+    :param cfg_name: Config name
+    :type cfg_name: str
+    :param experiment_identifier: 8-character unique identifier for the current experiment
+    :type experiment_identifier: str
+    :param run: Run to evaluate
+    :type run: int
+    :param net: Model
+    :type net:
+    :param eval_data: Evaluation dataloder
+    :type eval_data: th.utils.data.DataLoader
+    :param callbacks: List of callbacks to call after evaluation
+    :type callbacks: List
+    :param load_best: Load the "best.pt" model before evaluation?
+    :type load_best: bool
+    :return: Evaluation logs
+    :rtype: dict
+    """
     if load_best:
         model_path = helpers.get_save_dir(cfg_name, experiment_identifier, run) / "best.pt"
         if os.path.isfile(model_path):

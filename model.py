@@ -10,6 +10,9 @@ import torch.nn as nn
 def he_init_weights(module):
     """
     Initialize network weights using the He (Kaiming) initialization strategy.
+
+    :param module: Network module
+    :type module: nn.Module
     """
     if isinstance(module, (nn.Conv2d, nn.Linear)):
         nn.init.kaiming_normal_(module.weight)
@@ -75,7 +78,11 @@ class scMVC_simple(ModelBase):
 #contrastive MVC for single cell multiomics data
 class scMVC_contrast(ModelBase):
     def __init__(self, cfg):
+        """
+        Implementation of the CoMVC model.
 
+        :param cfg: Model config. See `config.defaults.CoMVC` for documentation on the config object.
+        """
         super().__init__()
 
         self.cfg = cfg

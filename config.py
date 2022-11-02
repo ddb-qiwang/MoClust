@@ -46,6 +46,8 @@ class Loss_config(Config):
     n_views: int = 2
     # Number of clusters
     n_clusters: int = None
+    # cuda device
+    device = 0
     # Terms to use in the loss, separated by '|'. E.g. "ddc_1|ddc_2|ddc_3|" for the DDC clustering loss
     funcs: str
     # Optional weights for the loss terms. Set to None to have all weights equal to 1.
@@ -91,6 +93,8 @@ class DDC_config(Config):
     use_bn = False
     # If direct or not
     direct = False
+    # cuda device
+    device = 0
 
     
 class Fusion_config(Config):

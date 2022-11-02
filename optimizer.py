@@ -3,7 +3,14 @@ import torch as th
 
 class Optimizer:
     def __init__(self, cfg, params):
- 
+        """
+        Wrapper class for optimizers
+
+        :param cfg: Optimizer config
+        :type cfg: config.defaults.Optimizer
+        :param params: Parameters to associate with the optimizer
+        :type params:
+        """
         self.clip_norm = cfg.clip_norm
         self.params = params
         self._opt = th.optim.Adam(params, lr=cfg.learning_rate)

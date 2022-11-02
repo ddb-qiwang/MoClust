@@ -11,7 +11,7 @@ def train(net, loader, n_epochs):
     for e in range(1, n_epochs + 1):
         iter_losses = []
         for i, data in enumerate(loader):
-            batch, _ = data
+            batch = data
             try:
                 batch_losses = net.train_step(batch, epoch=(e-1), it=i, n_batches=n_batches)
                 #print(batch_losses)

@@ -16,7 +16,12 @@ class none_layer(nn.Module):
 
 class DDC(nn.Module):
     def __init__(self, input_dim, cfg):
-     
+        """
+        DDC clustering module
+
+        :param input_dim: Shape of inputs.
+        :param cfg: DDC config. See `config.defaults.DDC`
+        """
         super().__init__()
 
         hidden_layers = [nn.Linear(input_dim[0], cfg.n_hidden), nn.ReLU()]

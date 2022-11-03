@@ -24,7 +24,7 @@ python >= 3.7
 - sklearn == 1.0.2
 
 - scipy == 1.4.1
-- 
+
 - seaborn == 0.9.0
 
 - tabulate = 0.8.9

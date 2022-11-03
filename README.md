@@ -35,11 +35,15 @@ Before we get started, we need to preprocess your CITE-seq or SNARE-seq data
 A gtf file compatible with your data is also needed when training MoClust over SNARE-seq data
 
 # Training
-You can train MoClust over CITE-seq data by
+We provide an example data with labels, you can train MoClust over it by
+
+    python main_citeseq --RNA_raw_matrix='/rna_mat.csv' --ADT_raw_matrix='/prt_mat.csv -- have_labels=True --labels_path='/labels.csv'
+
+You can train MoClust over un-annotated CITE-seq data by
 
     python main_citeseq --RNA_raw_matrix='/rna.csv' --ADT_raw_matrix='/adt.csv
     
-You can train MoClust over SNARE-seq data by
+You can train MoClust over un-annotated SNARE-seq data by
 
     python main_snareseq --RNA_raw_matrix='/rna.csv' --ATAC_raw_matrix='/atac.csv --gtf='/gencode.v39.annotation.gtf'
     

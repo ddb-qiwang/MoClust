@@ -27,3 +27,15 @@ You can train MoClust over CITE-seq data by
 You can train MoClust over SNARE-seq data by
 
     python main_snareseq --RNA_raw_matrix='/rna.csv' --ATAC_raw_matrix='/atac.csv --gtf='/gencode.v39.annotation.gtf'
+    
+# Hyper-parameters
+The list of parameters is given below:
+
+>-RNA_raw_matrix: the path of rna matrix csv file
+>-ADT_raw_matrix: the path of protein matrix csv file
+>-have_labels: have ground truth or not
+>-labels_path: the path of ground truth csv file
+>-highly_genes: the number of highly variable genes to be selected
+
+
+

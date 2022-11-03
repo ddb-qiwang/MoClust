@@ -27,10 +27,10 @@ python >= 3.7
 # Data Format
 Before we get started, we need to preprocess your CITE-seq or SNARE-seq data 
 
-    RNA data -- a cell x gene csv file
-    Protein data -- a cell x protein csv file
-    ATAC data --  a cell x peak csv file
-        the columns of ATAC file should be like chr1:56782095-56782395
+    - RNA data -- a cell x gene csv file
+    - Protein data -- a cell x protein csv file
+    - ATAC data --  a cell x peak csv file
+        - the columns of ATAC file should be like chr1:56782095-56782395
         
 A gtf file compatible with your data is also needed when training MoClust over SNARE-seq data
 

@@ -1,4 +1,4 @@
-CITE-seq 10X10K PBMC dataset with selected genes(3000)
+CITE-seq 10X10K PBMC dataset with selected genes(500)
 
 The complete dataset can be downloaded from 
 

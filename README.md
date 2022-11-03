@@ -1,5 +1,5 @@
 # MoClust
-A pytorch implement of single-cell multiomic integrating method MoClust.
+A pytorch implement of single-cell multi-omics clustering method MoClust.
 
 ![image](https://user-images.githubusercontent.com/52522175/160607926-0e77a9b5-7a1a-4b88-8f64-299de3029092.png)
 
@@ -10,7 +10,6 @@ A pytorch implement of single-cell multiomic integrating method MoClust.
 We present MoClust, a novel joint clustering methods that can be applied to several types of single-cell multiomics data. Introducing a contrastive learning based alignment technique, MoClust is able to to learn common representations that well suited for clustering, while simultaneously considering the topology structure of latent features. Furthermore,we proposed a novel automatic doublet discovery module that can efficiently find doublets without manually setting a threshold. Extensive experiments demonstrated the powerful alignment and clustering ability of MoClust.
 
 # Environment
-
 python >= 3.7
 
 - scanpy == 1.6.0
@@ -47,7 +46,7 @@ You can train MoClust over un-annotated SNARE-seq data by
 
     python main_snareseq --RNA_raw_matrix='/rna.csv' --ATAC_raw_matrix='/atac.csv --gtf='/gencode.v39.annotation.gtf'
     
-# Hyper-parameters
+# Parameters of Moclust
 The list of parameters is given below:
 
 >- RNA_raw_matrix: the path of rna matrix csv file

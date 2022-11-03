@@ -34,8 +34,8 @@ Before we get started, we need to preprocess your CITE-seq or SNARE-seq data
         
 A gtf file compatible with your data is also needed when training MoClust over SNARE-seq data
 
-# Training
-We provide an example data with labels, you can train MoClust over it by
+# Train MoClust over Multi-Omics data
+We provide an example CITE-seq data with ground truth labels, you can train MoClust over it by
 
     python main_citeseq --RNA_raw_matrix='/rna_mat.csv' --ADT_raw_matrix='/prt_mat.csv -- have_labels=True --labels_path='/labels.csv'
 

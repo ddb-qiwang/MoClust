@@ -31,15 +31,15 @@ You can train MoClust over SNARE-seq data by
 # Hyper-parameters
 The list of parameters is given below:
 
->-RNA_raw_matrix: the path of rna matrix csv file
+>- RNA_raw_matrix: the path of rna matrix csv file
 >
->-ADT_raw_matrix: the path of protein matrix csv file
+>- ADT_raw_matrix: the path of protein matrix csv file
 >
->-have_labels: have ground truth or not
+>- have_labels: have ground truth or not
 >
->-labels_path: the path of ground truth csv file
+>- labels_path: the path of ground truth csv file
 >
->-highly_genes: the number of highly variable genes to be selected
+>- highly_genes: the number of highly variable genes to be selected
 
 
 

@@ -21,15 +21,13 @@ python >= 3.7
 
 - torch == 1.10.2+cu102
 
-- matplotlib == 3.3.3
-
-- seaborn == 0.9.0
-
-- tabulate = 0.8.9
-
 - sklearn == 1.0.2
 
 - scipy == 1.4.1
+- 
+- seaborn == 0.9.0
+
+- tabulate = 0.8.9
 
 - typing
 

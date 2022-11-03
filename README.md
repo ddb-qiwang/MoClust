@@ -14,23 +14,14 @@ We present MoClust, a novel joint clustering methods that can be applied to seve
 python >= 3.7
 
 - scanpy == 1.6.0
-
 - numpy == 1.21.6
-
 - pandas == 1.3.5
-
 - torch == 1.10.2+cu102
-
 - sklearn == 1.0.2
-
 - scipy == 1.4.1
-
 - seaborn == 0.9.0
-
 - tabulate = 0.8.9
-
 - typing
-
 - pydantic
 
 # Data Format

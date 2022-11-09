@@ -21,16 +21,7 @@ python >= 3.7
 - seaborn == 0.9.0
 - tabulate = 0.8.9
 - typing == 3.5.0
-- pydantic == 1.10.2
-
-# Quick Install
-Package MoClust can be directly downloaded by
-
-    conda create -n MoClust python=3.8
-    conda activate MoClust
-    pip install MoClust==0.0.3
-    
-
+- pydantic == 1.10.2   
 
 # Data Format
 Before we get started, we need to preprocess your CITE-seq or SNARE-seq data 
@@ -107,4 +98,51 @@ Hyper-parameters:
 > 
 > - delta: constrains the strength of contrastive loss in Eq (13), default as 0.1
 
+# Quick Install
+Package MoClust can be directly downloaded by
 
+    conda create -n MoClust python=3.8
+    conda activate MoClust
+    pip install MoClust==0.0.3
+ 
+ 
+# Train MoClust over Multi-Omics data
+We provide an example to apply MoClust over CITE-seq data
+
+    import MoClust
+    import torch
+
+    device = torch.device("cuda",0)
+    views = [rna_mat, prt_mat]
+    train_dataset = MoClust.multiviewDataset(views,labels, device ,highly_genes=[[0],[2000]])
+    sampler = torch.utils.data.RandomSampler(train_dataset)
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        sampler=sampler,
+        batch_size=256,
+        drop_last=True,
+    )
+    print("Building Multimodal dataset done with {} cells loaded.".format(len(train_dataset)))  
+
+    import time
+
+    encoder1_cfg = MoClust.encoder_cfg(Layer=(np.shape(train_dataset.views[0].X)[1],256,64,32))
+    encoder2_cfg = MoClust.encoder_cfg(Layer=(np.shape(train_dataset.views[1].X)[1],32))
+    mvencoder_cfg = MoClust.mvencoder_cfg(view1_encoder_cfg=encoder1_cfg, view2_encoder_cfg=encoder2_cfg)
+    ddc_cfg = MoClust.DDC_config(n_clusters=6, n_hidden=16,device=0)
+    loss_cfg = MoClust.Loss_config(n_clusters=6,device=0, funcs="ddc_1|ddc_2|ddc_3|contrast",
+                                   weights=[1.0,1.0,1.0,0.05],
+                                   rel_sigma=0.15, tau=0.1, delta=0.01, gamma=1.0)
+    optimizer_cfg = MoClust.Optimizer_config(learning_rate=0.0001)
+    mvnet_cfg = MoClust.scMVC_contrast_config(multiview_encoders_config=mvencoder_cfg,
+                                              cm_config=ddc_cfg, loss_config=loss_cfg,
+                                              optimizer_config=optimizer_cfg)
+
+    scMVC_contrast_model = MoClust.scMVC_contrast(mvnet_cfg).to(device)
+    t0 = time.time()
+    MoClust.train_cfg(scMVC_contrast_model, train_loader, 100, train_loader, 256, 10)
+    t1 = time.time()
+    trun = t1 - t0
+    print("MoClust running time: %s s"%trun)
+    
+    

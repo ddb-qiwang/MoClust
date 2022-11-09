@@ -1,5 +1,5 @@
 import torch
-from preprocess import *
+from .preprocess import *
 from typing import Tuple, List, Union, Optional
 from typing_extensions import Literal
 from pydantic import BaseModel

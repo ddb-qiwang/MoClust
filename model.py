@@ -1,9 +1,9 @@
 # assembling the whole simple/contrastive MVC model
-from multiview_autoencoders import *
-from loss import *
-from fusion import *
-from ddc import *
-from optimizer import *
+from moclust.multiview_autoencoders import *
+from .loss import *
+from .fusion import *
+from .ddc import *
+from .optimizer import *
 
 import torch.nn as nn
 

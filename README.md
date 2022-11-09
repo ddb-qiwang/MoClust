@@ -107,7 +107,7 @@ Package MoClust can be directly downloaded by
  
  
 # Train MoClust over Multi-Omics data
-We provide an example to apply MoClust over CITE-seq data
+We provide an example to apply MoClust over CITE-seq data using package MoClust
 
     import MoClust
     import torch

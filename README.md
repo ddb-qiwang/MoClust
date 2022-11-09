@@ -15,13 +15,22 @@ python >= 3.7
 - scanpy == 1.6.0
 - numpy == 1.21.6
 - pandas == 1.3.5
-- torch == 1.10.2+cu102
-- sklearn == 1.0.2
+- torch == 1.10.2
+- scikit-learn == 1.0.2
 - scipy == 1.4.1
 - seaborn == 0.9.0
 - tabulate = 0.8.9
-- typing
-- pydantic
+- typing == 3.5.0
+- pydantic == 1.10.2
+
+# Quick Install
+Package MoClust can be directly downloaded by
+
+    conda create -n MoClust python=3.8
+    conda activate MoClust
+    pip install MoClust==0.0.3
+    
+
 
 # Data Format
 Before we get started, we need to preprocess your CITE-seq or SNARE-seq data 

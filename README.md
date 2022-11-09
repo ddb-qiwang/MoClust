@@ -10,7 +10,7 @@ A pytorch implement of single-cell multi-omics clustering method MoClust.
 We present MoClust, a novel joint clustering methods that can be applied to several types of single-cell multiomics data. Introducing a contrastive learning based alignment technique, MoClust is able to to learn common representations that well suited for clustering, while simultaneously considering the topology structure of latent features. Furthermore,we proposed a novel automatic doublet discovery module that can efficiently find doublets without manually setting a threshold. Extensive experiments demonstrated the powerful alignment and clustering ability of MoClust.
 
 # Environment
-python >= 3.7
+python >= 3.8
 
 - scanpy == 1.6.0
 - numpy == 1.21.6
@@ -103,7 +103,7 @@ Package MoClust can be directly downloaded by
 
     conda create -n MoClust python=3.8
     conda activate MoClust
-    pip install MoClust==0.0.3
+    pip install MoClust==0.0.5
  
  
 # Train MoClust over Multi-Omics data

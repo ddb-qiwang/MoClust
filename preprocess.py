@@ -1,4 +1,4 @@
-from .utils import *
+import utils as utils
 import h5py
 import scipy as sp
 import numpy as np
@@ -122,7 +122,7 @@ class multiviewDataset_nolabel(data.Dataset):
 def read_clean(data):
     assert isinstance(data, np.ndarray)
     if data.dtype.type is np.bytes_:
-        data = decode(data)
+        data = utils.decode(data)
     if data.size == 1:
         data = data.flat[0]
     return data
@@ -130,7 +130,7 @@ def read_clean(data):
 
 def dict_from_group(group):
     assert isinstance(group, h5py.Group)
-    d = dotdict()
+    d = utils.dotdict()
     for key in group:
         if isinstance(group[key], h5py.Group):
             value = dict_from_group(group[key])
@@ -142,8 +142,8 @@ def dict_from_group(group):
 
 def read_data(filename, sparsify = False, skip_exprs = False):
     with h5py.File(filename, "r") as f:
-        obs = pd.DataFrame(dict_from_group(f["obs"]), index = decode(f["obs_names"][...]))
-        var = pd.DataFrame(dict_from_group(f["var"]), index = decode(f["var_names"][...]))
+        obs = pd.DataFrame(dict_from_group(f["obs"]), index = utils.decode(f["obs_names"][...]))
+        var = pd.DataFrame(dict_from_group(f["var"]), index = utils.decode(f["var_names"][...]))
         uns = dict_from_group(f["uns"])
         if not skip_exprs:
             exprs_handle = f["exprs"]

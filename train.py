@@ -1,6 +1,6 @@
 # training
-from .helpers import *
-from .evaluate import *
+from helpers import *
+from evaluate import *
 from torch.autograd import Variable
 
 n_epochs = 200

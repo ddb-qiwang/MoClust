@@ -1,7 +1,7 @@
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
-from .loss_kernels import *
+from loss_kernels import *
 
 DATETIME_FMT = "%Y-%m-%d_%H-%M-%S"
 

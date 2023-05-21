@@ -130,9 +130,9 @@ We provide an example to apply MoClust over CITE-seq data using package MoClust
     encoder2_cfg = MoClust.encoder_cfg(Layer=(np.shape(train_dataset.views[1].X)[1],32))
     mvencoder_cfg = MoClust.mvencoder_cfg(view1_encoder_cfg=encoder1_cfg, view2_encoder_cfg=encoder2_cfg)
     ddc_cfg = MoClust.DDC_config(n_clusters=6, n_hidden=16,device=0)
-    loss_cfg = MoClust.Loss_config(n_clusters=6,device=0, funcs="ddc_1|ddc_2|ddc_3|contrast",
-                                   weights=[1.0,1.0,1.0,0.05],
-                                   rel_sigma=0.15, tau=0.1, delta=0.01, gamma=1.0)
+    loss_cfg = MoClust.Loss_config(n_clusters=6,device=0, funcs="ddc_1|ddc_2|ddc_3|zinb_1|contrast",
+                                   weights=[1.0,1.0,1.0,1.0,1.0],
+                                   rel_sigma=0.15, tau=0.1, delta=0.1, gamma=1.0)
     optimizer_cfg = MoClust.Optimizer_config(learning_rate=0.0001)
     mvnet_cfg = MoClust.scMVC_contrast_config(multiview_encoders_config=mvencoder_cfg,
                                               cm_config=ddc_cfg, loss_config=loss_cfg,
